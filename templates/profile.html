@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        .notification-card {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        ul.navbar-nav.navbar-right {
+            position: relative;
+            bottom: 50px;
+            left: 70px;
+        }
+        .navbar-nav > li {
+            margin-left: 10px;
+        }
+        /* Center profile */
+        .profile {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .profile-img {
+            max-width: 200px;
+            border-radius: 50%;
+            border: 3px solid black; /* Added border style */
+            padding: 3px; /* Padding to adjust for border */
+        }
+        .profile-details {
+            max-width: 400px;
+            margin: 0 auto; /* Center horizontally */
+        }
+        .logout-btn {
+            margin-top: 10px;
+        }
+        .dropdown-menu a {
+            color: black !important; /* Ensure dropdown menu text is readable */
+        }
+        .dropdown-menu {
+            background-color: #333; /* Dark background for dropdown */
+        }
+        #settingsBtn{
+            position: relative;
+            top:5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="navbar-header">
+                        <button class="navbar-toggle" data-target="#mobile_menu" data-toggle="collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a href="#" class="navbar-brand">CodTech</a>
+                    </div>
+                    <div class="navbar-collapse collapse" id="mobile_menu">
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="#">Home</a></li>
+                            <li><a href="/friends">Friends</a></li>
+                            <li><a href="/friend_requests">Friend Request</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li><a href="/profile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <span class="glyphicon glyphicon-log-in"></span> Login / Sign Up <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="/login">Login</a></li>
+                                    <li><a href="/signup">Sign Up</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="profile">
+            <img src="{{ url_for('static', filename='uploads/' + user.img) }}" alt="{{ user.name }}" class="profile-img">
+            <h3>{{ user.name }}</h3>
+            <p>Interest: {{ user.interest }}</p>
+            <div class="text-center">
+                <button id="settingsBtn" class="btn btn-primary">Settings</button>
+                <a href="{{ url_for('logout') }}" class="btn btn-primary logout-btn">Logout</a>
+            </div>
+        </div>
+        <div id="passwordChangeModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title">Change Password</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="passwordChangeForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>    
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#settingsBtn').click(function () {
+                $('#passwordChangeModal').modal('show');
+            });
+
+            $('#passwordChangeForm').submit(function (e) {
+                e.preventDefault();
+                var currentPassword = $('#currentPassword').val();
+                var newPassword = $('#newPassword').val();
+                var confirmPassword = $('#confirmPassword').val();
+
+                // Perform validation if needed (e.g., confirm new password matches)
+
+                $.ajax({
+                    url: '/change-password',
+                    type: 'POST',
+                    data: {
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    },
+                    success: function (response) {
+                        alert('Password changed successfully!');
+                        $('#passwordChangeModal').modal('hide');
+                    },
+                    error: function () {
+                        alert('Failed to change password. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

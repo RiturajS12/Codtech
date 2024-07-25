@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friends</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style>
+        .friend-list {
+            margin-top: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .card img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 50%;
+        }
+        .card .details {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button class="navbar-toggle" data-target="#mobile_menu" data-toggle="collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a href="#" class="navbar-brand">CodTech</a>
+            </div>
+            <div class="navbar-collapse collapse" id="mobile_menu">
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Home</a></li>
+                    <li class="active"><a href="#">Friends</a></li>
+                    <li><a href="/friend_requests">Friend Request</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/profile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-log-in"></span> Login / Sign Up <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/login">Login</a></li>
+                            <li><a href="/signup">Sign Up</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container friend-list">
+        {% for friend in friends %}
+        <div class="card">
+            <img src="{{ url_for('static', filename='uploads/' ~ friend.img) }}" alt="{{ friend.name }}">
+            <div class="details">
+                <h4>{{ friend.name }}</h4>
+                <p>Interest: {{ friend.interest }}</p>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#messageModal" data-receiver-id="{{ friend.id }}" data-receiver-name="{{ friend.name }}">Send Message</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="messageModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chat</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="messagesContainer"></div>
+                    <form id="messageForm" enctype="multipart/form-data"> <!-- Add enctype for file uploads -->
+                        <div class="form-group">
+                            <textarea id="messageContent" class="form-control" rows="3" placeholder="Type your message here"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="file">Upload Media:</label>
+                            <input type="file" id="file" name="file" accept="image/*"> <!-- Accept only image files for simplicity -->
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                        <input type="hidden" id="receiverId">
+                    </form>
+                </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        $('#messageModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var receiverId = button.data('receiver-id');
+            var receiverName = button.data('receiver-name');
+            var modal = $(this);
+            modal.find('.modal-title').text('Send Message to ' + receiverName);
+            modal.find('#receiverId').val(receiverId);
+
+            $.get('/messages/' + receiverId, function (response) {
+                var messagesContainer = $('#messagesContainer');
+                messagesContainer.empty();
+
+                if (response.error) {
+                    messagesContainer.append('<p>' + response.error + '</p>');
+                    return;
+                }
+
+                response.forEach(function (message) {
+                messagesContainer.append(`
+            <div class="message">
+                <strong>${message.sender_name}:</strong>
+                <p>${message.message_content}</p>
+                ${message.media_path ? `<img src="${message.media_path}" alt="Media">` : ''}
+                <small>${new Date(message.created_at).toLocaleString()}</small>
+            </div>
+                `);
+            });
+            }).fail(function () {
+                $('#messagesContainer').append('<p>Failed to load messages.</p>');
+            });
+        });
+
+        $('#messageForm').on('submit', function (e) {
+    e.preventDefault();
+    var receiverId = $('#receiverId').val();
+    var message = $('#messageContent').val();
+    var formData = new FormData(); // Create FormData object to send both text and file data
+
+    formData.append('message', message);
+    formData.append('file', $('#file')[0].files[0]); // Append the selected file
+
+    $.ajax({
+        url: '/message/' + receiverId,
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function () {
+            $('#messageContent').val('');
+            $('#messageModal').modal('hide');
+            alert('Message sent successfully!');
+        },
+        error: function () {
+            alert('Failed to send message. Please try again.');
+        }
+    });
+});
+    </script>
+</body>
+</html>

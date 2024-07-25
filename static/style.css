@@ -1,0 +1,41 @@
+.container-fluid {
+  display: flex;
+}
+.frnd-recommendation {
+  width: 70%;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+}
+.news-feed {
+  width: 30%;
+  padding: 20px;
+}
+.card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.card img {
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+.card .card-body {
+  display: flex;
+  align-items: center;
+}
+.card .details {
+  flex-grow: 1;
+}
+.read-more {
+  text-align: center;
+  margin-top: 20px;
+}
+.news-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodTech</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button class="navbar-toggle" data-target="#mobile_menu" data-toggle="collapse">
+                    <span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
+                </button>
+                <a href="#" class="navbar-brand">CodTech</a>
+            </div>
+            <div class="navbar-collapse collapse" id="mobile_menu">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">Home</a></li>
+                    <li><a href="/friends">Friends</a></li>
+                    <li><a href="/friend_requests">Friend Request</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/profile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-log-in"></span> Login / Sign Up <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/login">Login</a></li>
+                            <li><a href="/signup">Sign Up</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="frnd-recommendation" id="friend-list">
+            {% if no_recommendations %}
+                <p>No recommendations available at the moment.</p>
+            {% else %}
+                {% for friend in initial_friends %}
+                <div class="card" data-id="{{ friend.id }}">
+                    <div class="card-body">
+                        <img src="{{ url_for('static', filename='uploads/' + friend.img) }}" alt="{{ friend.name }}" class="friend-img">
+                        <div class="details">
+                            <h4>{{ friend.name }}</h4>
+                            <p>Interest: {{ friend.interest }}</p>
+                            <button class="btn btn-primary btn-sm send-request-btn" data-id="{{ friend.id }}">Send Friend Request</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="read-more" id="read-more-container">
+                    <button class="btn btn-default" id="load-more">Read More</button>
+                </div>
+            {% endif %}
+        </div>        
+        <div class="news-feed" id="news-feed">
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+       $(document).ready(function() {
+    function fetchNewsFeed() {
+    $.ajax({
+        url: '/news_feed_updates',
+        method: 'GET',
+        success: function(data) {
+            $('#news-feed').empty();  
+            data.forEach(function(news) {
+                $('#news-feed').append(`
+                    <div class="news-item">${news.sender_name ? news.sender_name + ': ' : ''}${news.message}</div>
+                `);
+            });
+        }
+    });
+}
+
+
+    function fetchNotifications() {
+        $.ajax({
+            url: '/notifications',
+            method: 'GET',
+            success: function(data) {
+                var count = data.length;
+                $('#notifications-count').text(count); 
+            }
+        });
+    }
+
+    fetchNewsFeed();
+    fetchNotifications();
+
+    setInterval(fetchNotifications, 100000);
+
+    $('#load-more').click(function() {
+        var lastFriendId = $('.card').last().data('id');
+        $.ajax({
+            url: '/load_more_friends',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ last_friend_id: lastFriendId }),
+            success: function(data) {
+                if (data.length === 0) {
+                    $('#read-more-container').remove();
+                } else {
+                    data.forEach(function(friend) {
+                        $('#friend-list').append(`
+                            <div class="card" data-id="${friend.id}">
+                                <div class="card-body">
+                                    <img src="${friend.img}" alt="${friend.name}">
+                                    <div class="details">
+                                        <h4>${friend.name}</h4>
+                                        <p>Interest: ${friend.interest}</p>
+                                        <button class="btn btn-primary btn-sm send-request-btn" data-id="${friend.id}">Send Friend Request</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                    $('#read-more-container').remove();
+                    $('#friend-list').append(`
+                        <div class="read-more" id="read-more-container">
+                            <button class="btn btn-default" id="load-more">Read More</button>
+                        </div>
+                    `);
+                }
+            }
+        });
+    });
+
+    $('#friend-list').on('click', '.send-request-btn', function() {
+        var friendId = $(this).data('id');
+        $.ajax({
+            url: '/send_friend_request',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ friend_id: friendId }),
+            success: function(response) {
+                if (response.success) {
+                    alert('Friend request sent!');
+                    fetchNotifications();
+                } else {
+                    alert(response.error);
+                }
+            }
+        });
+    });
+});
+    </script>
+</body>
+</html>
